@@ -16,10 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from emissions.views import EmissionsAPI, FileHistoryAPI
+from emissions.views import FileUploadAPI, FileHistoryAPI, FileInfoAPI
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/emissions/', EmissionsAPI.as_view(), name="emissions-api"),
-    path('api/files/', FileHistoryAPI.as_view(), name="file-history-api"),
+    path('api/upload-file/', FileUploadAPI.as_view(), name="upload"),
+    path('api/files/<int:file_id>/', FileInfoAPI.as_view(), name="info"),
+    path('api/files/', FileHistoryAPI.as_view(), name="history"),
 ]
