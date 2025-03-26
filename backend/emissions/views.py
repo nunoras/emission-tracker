@@ -153,7 +153,7 @@ class FileStatsView(APIView):
 
         # Prepare sorted response data
         sorted_years = sorted(tier_data.keys())
-        sector_list = sorted({s for year in sector_data.values() for s in year.keys() if not s.endswith('_energy')})
+        sector_list = sorted({s for year in sector_data.values() for s in year.keys()})
         company_list = sorted(
             {c for year in company_data.values() for c in year.keys()},
             key=natural_sort_key

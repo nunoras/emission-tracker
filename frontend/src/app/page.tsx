@@ -12,7 +12,9 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 import { TotalCo2Chart } from "@/components/TotalCo2Chart"
-
+import { EnergyConsumptionChart } from "@/components/EnergyConsumptionChart"
+import { ChartColorService } from "@/lib/color-service";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 
 interface UploadedFile {
   id: string
@@ -109,6 +111,10 @@ export default function EmissionsDashboard() {
     }
   };
 
+  useEffect(() => {
+    ChartColorService.reset();
+  }, [stats]); // Reset when main data changes
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar */}
@@ -169,16 +175,27 @@ export default function EmissionsDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-y-auto">
+      <main className="flex-1 flex flex-col overflow-y-auto p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 
-        <TotalCo2Chart
-          tierData={stats?.tiers || []} 
-          sectorData={stats?.sectors} 
-          companyData={stats?.companies} 
-          metaData={stats?.metadata || []}
-        />
+          <TotalCo2Chart
+            tierData={stats?.tiers || []}
+            sectorData={stats?.sectors}
+            companyData={stats?.companies}
+            metaData={stats?.metadata || []}
+          />
+
+
+          <EnergyConsumptionChart
+            tierData={stats?.tiers || []}
+            sectorData={stats?.sectors}
+            companyData={stats?.companies}
+            metaData={stats?.metadata || []}
+          />
+
+        </div>
 
       </main>
-    </div>
+    </div >
   );
 }
