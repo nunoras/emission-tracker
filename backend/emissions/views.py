@@ -12,22 +12,85 @@ import re
 
 
 def natural_sort_key(s):
+    """
+    Natural sorting key function.
+
+    This function returns a list of strings and integers obtained by
+    splitting the input string `s` at each sequence of digits. The
+    strings are converted to lower case and the integers are converted
+    to integers. This allows strings to be sorted in a natural way (i.e.,
+    "file2.txt" comes after "file10.txt").
+
+    Args:
+        s (str): The string to be sorted.
+
+    Returns:
+        list: A list of strings and integers representing the natural
+            sorting key of `s`.
+    """
     return [int(text) if text.isdigit() else text.lower() 
             for text in re.split('([0-9]+)', s)]
 
 
 class FileUploadView(APIView):    
     def post(self, request):
+        """
+        Process an uploaded Excel file and store its contents in the database.
+
+        Request should contain a single file field with the Excel file.
+
+        The Excel file must have the following columns:
+
+        - Empresa
+        - Setor
+        - Consumo de Energia (MWh)
+        - Emissões de CO2 (toneladas)
+        - Ano
+
+        The API will return a JSON object with the following keys:
+
+        - status: always set to "success"
+        - file_id: the ID of the newly created UploadedFile instance
+        - records_created: the number of CompanyEmissions records created
+
+        If the file is invalid or does not conform to the expected
+        schema, the API will return a 400 or 422 error with a message
+        describing the error.
+
+        If the file is larger than 10MB, the API will return a 413 error.
+
+        The API will also return a JSON object with the sector performance
+        by year, with the following keys:
+
+        - sector
+        - year
+        - co2_emissions_sum
+        - co2_emissions_mean
+        - co2_emissions_count
+        - energy_consumption_sum
+        - energy_consumption_mean
+        """
         MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
-        
         if 'file' not in request.FILES:
             return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
 
         file_obj = request.FILES['file']
-        
         if file_obj.size > MAX_FILE_SIZE:
             return Response({"error": "File too large (max 10MB)"}, status=413)
         
+        
+        df = pd.read_excel(BytesIO(file_obj.read()))
+        
+        required_columns = set([
+            "Empresa",
+            "Setor",
+            "Consumo de Energia (MWh)",
+            "Emissões de CO2 (toneladas)",
+            "Ano",
+        ])
+        
+        if not required_columns.issubset(df.columns):
+            return Response({"error": "File must obey the schema"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             uploaded_file = UploadedFile.objects.create(
                 name=file_obj.name  
@@ -66,21 +129,33 @@ class FileUploadView(APIView):
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY
             )
             
-        """Sector performance by year"""
-        return df.groupby(['sector', 'year']).agg(
-            co2_emissions_sum=('co2_emissions', 'sum'),
-            co2_emissions_mean=('co2_emissions', 'mean'),
-            co2_emissions_count=('co2_emissions', 'count'),
-            energy_consumption_sum=('energy_consumption', 'sum'),
-            energy_consumption_mean=('energy_consumption', 'mean')
-        ).reset_index().to_dict(orient='records')
 class FileHistoryView(APIView):
     def get(self, request):
+        """
+        Return a list of uploaded files with their IDs, names, and upload dates.
+
+        Files are ordered by upload date, with the most recent file first.
+        """
+        
         files = UploadedFile.objects.all().values("id", "name", "upload_date")
         return Response(files)
 
 class FileStatsView(APIView):
     def get(self, request, file_id):
+        """
+        Return the emissions and energy consumption data for the given file ID.
+
+        Response data is structured as follows:
+
+        * `file_info`: A dictionary containing the file ID, name, and upload date.
+        * `tiers`: A list of dictionaries, each containing the year and the sum of emissions and energy consumption for each tier.
+        * `sectors`: A list of dictionaries, each containing the year and the sum of emissions and energy consumption for each sector.
+        * `companies`: A list of dictionaries, each containing the year and a list of dictionaries for each company, containing the company name, emissions, consumption, and sector.
+        * `metadata`: A dictionary containing the list of years, sectors, and companies in the file, as well as the total number of companies.
+
+        :param file_id: The ID of the file to retrieve data for.
+        :return: A JSON response containing the requested data.
+        """
         try:
             uploaded_file = UploadedFile.objects.get(pk=file_id)
         except UploadedFile.DoesNotExist:
@@ -191,6 +266,21 @@ class FileStatsView(APIView):
     
 class FileDeleteView(APIView):
     def delete(self, request, file_id):
+        """
+        Deletes a file by ID.
+
+        Args:
+            request: The request object.
+            file_id: The ID of the file to delete.
+
+        Returns:
+            A response object with a JSON payload containing either a success message
+            or an error message.
+
+        Raises:
+            UploadedFile.DoesNotExist: If the file with the given ID does not exist.
+        """
+
         try:
             uploaded_file = UploadedFile.objects.get(id=file_id)
             uploaded_file.delete()
