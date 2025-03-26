@@ -57,24 +57,9 @@ export default function EmissionsDashboard() {
     fetchFiles()
   }, [])
 
-  // Fetch both analytics and stats when file is selected
+  // Fetch stats when file is selected
   useEffect(() => {
-
     const fetchData = async () => {
-
-      toast.promise(
-        api.get(`/files/${selectedFileId}/analytics/`),
-        {
-          loading: 'Fetching analytics...',
-          success: async () => {
-            return 'Analytics fetched successfully!'
-          },
-          error: (err) => {
-            console.error('Error fetching analytics:', err)
-            return 'Error fetching analytics'
-          }
-        }
-      )
 
       const { data } = await api.get(`/files/${selectedFileId}/stats/`)
       setStats(data)

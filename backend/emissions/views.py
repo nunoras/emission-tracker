@@ -9,6 +9,7 @@ from collections import defaultdict
 from django.db.models import Avg
 import numpy as np
 import re 
+from django.db import transaction
 
 
 def natural_sort_key(s):
@@ -31,104 +32,103 @@ def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower() 
             for text in re.split('([0-9]+)', s)]
 
+class FileUploadView(APIView):
+    """
+    Process an uploaded Excel file and store its contents in the database.
+    
+    Expected Excel columns:
+    - Empresa (string)
+    - Setor (string)
+    - Consumo de Energia (MWh) (numeric)
+    - Emissões de CO2 (toneladas) (numeric)
+    - Ano (integer)
+    """
+    
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+    REQUIRED_COLUMNS = {
+        "Empresa",
+        "Setor",
+        "Consumo de Energia (MWh)",
+        "Emissões de CO2 (toneladas)",
+        "Ano"
+    }
 
-class FileUploadView(APIView):    
     def post(self, request):
-        """
-        Process an uploaded Excel file and store its contents in the database.
-
-        Request should contain a single file field with the Excel file.
-
-        The Excel file must have the following columns:
-
-        - Empresa
-        - Setor
-        - Consumo de Energia (MWh)
-        - Emissões de CO2 (toneladas)
-        - Ano
-
-        The API will return a JSON object with the following keys:
-
-        - status: always set to "success"
-        - file_id: the ID of the newly created UploadedFile instance
-        - records_created: the number of CompanyEmissions records created
-
-        If the file is invalid or does not conform to the expected
-        schema, the API will return a 400 or 422 error with a message
-        describing the error.
-
-        If the file is larger than 10MB, the API will return a 413 error.
-
-        The API will also return a JSON object with the sector performance
-        by year, with the following keys:
-
-        - sector
-        - year
-        - co2_emissions_sum
-        - co2_emissions_mean
-        - co2_emissions_count
-        - energy_consumption_sum
-        - energy_consumption_mean
-        """
-        MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+        # Validate file exists and is within size limit
         if 'file' not in request.FILES:
             return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
 
         file_obj = request.FILES['file']
-        if file_obj.size > MAX_FILE_SIZE:
-            return Response({"error": "File too large (max 10MB)"}, status=413)
-        
-        
-        df = pd.read_excel(BytesIO(file_obj.read()))
-        
-        required_columns = set([
-            "Empresa",
-            "Setor",
-            "Consumo de Energia (MWh)",
-            "Emissões de CO2 (toneladas)",
-            "Ano",
-        ])
-        
-        if not required_columns.issubset(df.columns):
-            return Response({"error": "File must obey the schema"}, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            uploaded_file = UploadedFile.objects.create(
-                name=file_obj.name  
-                # upload_date auto
+        if file_obj.size > self.MAX_FILE_SIZE:
+            return Response(
+                {"error": f"File exceeds {self.MAX_FILE_SIZE/1e6}MB limit"}, 
+                status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
             )
 
-            df = pd.read_excel(BytesIO(file_obj.read()))
-            
-            # Criar records de emissoes por linha do excel
-            CompanyEmissions.objects.bulk_create([
-                CompanyEmissions(
-                    file=uploaded_file,
-                    name=row['Empresa'],
-                    sector=row['Setor'],
-                    energy_consumption=row['Consumo de Energia (MWh)'],
-                    co2_emissions=row['Emissões de CO2 (toneladas)'],
-                    year=int(row['Ano'])
+        try:
+            # Read file content into memory
+            file_content = file_obj.read()
+            if not file_content:
+                return Response({"error": "Empty file provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Try multiple Excel engines
+            excel_file = BytesIO(file_content)
+            for engine in ['openpyxl', 'xlrd']:
+                try:
+                    df = pd.read_excel(excel_file, engine=engine)
+                    break
+                except Exception as e:
+                    continue
+            else:
+                raise ValueError("File is not a valid Excel document or is corrupted")
+
+            # Validate columns
+            missing_columns = self.REQUIRED_COLUMNS - set(df.columns)
+            if missing_columns:
+                return Response(
+                    {"error": f"Missing required columns: {', '.join(missing_columns)}"},
+                    status=status.HTTP_400_BAD_REQUEST
                 )
-                for _, row in df.iterrows()
-            ])
+
+            # Clean data
+            df = df.dropna(subset=['Emissões de CO2 (toneladas)', 'Ano'])
+            df['Ano'] = pd.to_numeric(df['Ano'], errors='coerce').astype('Int64')
+
+            # Create records
+            with transaction.atomic():
+                uploaded_file = UploadedFile.objects.create(name=file_obj.name)
+                
+                CompanyEmissions.objects.bulk_create([
+                    CompanyEmissions(
+                        file=uploaded_file,
+                        name=str(row['Empresa']),
+                        sector=str(row['Setor']),
+                        energy_consumption=float(row['Consumo de Energia (MWh)']),
+                        co2_emissions=float(row['Emissões de CO2 (toneladas)']),
+                        year=int(row['Ano'])
+                    ) for _, row in df.iterrows() if not pd.isna(row['Ano'])
+                ])
+
 
             return Response({
                 "status": "success",
                 "file_id": uploaded_file.id,
-                "records_created": len(df)
+                "records_created": len(df),
             })
 
-        except KeyError as e:
+        except ValueError as e:
             return Response(
-                {"error": f"Missing required column: {str(e)}"},
+                {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
             return Response(
-                {"error": f"Processing failed: {str(e)}"},
+                {
+                    "error": "File processing failed",
+                    "detail": str(e)
+                },
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY
             )
-            
 class FileHistoryView(APIView):
     def get(self, request):
         """

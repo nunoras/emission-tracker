@@ -75,7 +75,7 @@ export function TotalCo2Chart({
                                     style={{ backgroundColor: entry.color }}
                                 />
                                 <span className="font-medium">{entry.name}:</span>
-                                <span className="ml-2 font-bold">
+                                <span className="ml-2 font-medium">
                                     {Math.round(entry.value).toLocaleString()} tons
                                 </span>
                             </div>
