@@ -47,7 +47,7 @@ export function TotalCo2Chart({
     companyData,
     metaData = {}
 }: TotalCo2ChartProps) {
-    const [viewMode, setViewMode] = useState<"tiers" | "sectors" | "companies">("tiers")
+    const [viewMode, setViewMode] = useState<"tiers" | "sectors" | "companies">("sectors")
 
     // Custom tooltip component
     const CustomTooltip = ({ active, payload, label }: any) => {

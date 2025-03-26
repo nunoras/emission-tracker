@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { File, X, BarChart2 } from "lucide-react"
+import { File, Paperclip } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import api from "@/lib/api"
 import {
@@ -119,8 +119,9 @@ export default function EmissionsDashboard() {
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar */}
       <aside className="w-64 border-r bg-muted/20 flex flex-col sticky top-0 h-screen">
-        <header className="p-4 border-b">
-          <h2 className="font-semibold text-lg">File History</h2>
+        <header className="p-4 border-b flex items-center gap-2">
+          <Paperclip className="h-4 w-4"/>
+          <h2 className="font-semibold text-lg">File Browser</h2>
         </header>
 
         <ScrollArea className="flex-1 p-4">
@@ -176,26 +177,40 @@ export default function EmissionsDashboard() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-y-auto p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {stats ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <TotalCo2Chart
+              tierData={stats.tiers}
+              sectorData={stats.sectors}
+              companyData={stats.companies}
+              metaData={stats.metadata}
+            />
 
-          <TotalCo2Chart
-            tierData={stats?.tiers || []}
-            sectorData={stats?.sectors}
-            companyData={stats?.companies}
-            metaData={stats?.metadata || []}
-          />
+            <EnergyConsumptionChart
+              tierData={stats.tiers}
+              sectorData={stats.sectors}
+              companyData={stats.companies}
+              metaData={stats.metadata}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+            <div className="relative mb-8">
+              <div className="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center">
+                <File className="w-10 h-10 text-gray-300" strokeWidth={1.5} />
+              </div>
 
+            </div>
 
-          <EnergyConsumptionChart
-            tierData={stats?.tiers || []}
-            sectorData={stats?.sectors}
-            companyData={stats?.companies}
-            metaData={stats?.metadata || []}
-          />
-
-        </div>
-
+            <h3 className="text-lg font-medium text-gray-600 mb-2">No file selected</h3>
+            <p
+              className={`text-gray-500 text-center max-w-xs`}
+            >
+              Please upload and select a file from the sidebar to display it's data
+            </p>
+          </div>
+        )}
       </main>
-    </div >
+    </div>
   );
 }

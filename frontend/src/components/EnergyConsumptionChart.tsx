@@ -46,7 +46,7 @@ export function EnergyConsumptionChart({
     companyData,
     metaData = {}
 }: EnergyConsumptionChartProps) {
-    const [viewMode, setViewMode] = useState<"tiers" | "sectors" | "companies">("tiers")
+    const [viewMode, setViewMode] = useState<"tiers" | "sectors" | "companies">("sectors")
 
     // Format values in kWh
     const formatValue = (value: number) => {
