@@ -8,9 +8,8 @@
 **Rationale**:  
 - Built-in admin interface for data inspection  
 - ORM simplifies PostgreSQL integration  
-- Pandas compatibility for Excel processing  
-- Had Past experience 
 - Python is great for data manipulation (pandas, np)
+- Had Past experience 
 
 ### 2. Frontend Architecture  
 
@@ -34,7 +33,7 @@
 - Aggregate sector totals based on classifications
 
 **Considerations** 
-A company may belong to multiple sectors. If a company is listed more than once for the same year and sector, their values are summed.
+- A company may belong to multiple sectors. If a company is listed more than once for the same year and sector, their values are summed.
 
 ## 4. File Upload Validation (`FileUploadView`)
 
