@@ -33,12 +33,11 @@ A web platform for analyzing energy consumption and CO₂ emissions data from DG
 **Backend**:
 - Django 4.2 (REST API)
 - Django REST Framework
-- Pandas (Excel processing)
+- Pandas & Numpy (Excel processing)
 
 **Infrastructure**:
 - Docker + Docker Compose
 - PostgreSQL
-- Nginx (production)
 
 ## 🚀 Getting Started
 
