@@ -14,6 +14,9 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ZapIcon } from "lucide-react"
 
+/**
+ * Interface for the props of the EnergyConsumptionChart component.
+ */
 interface EnergyConsumptionChartProps {
     tierData: {
         year: string
@@ -40,22 +43,31 @@ interface EnergyConsumptionChartProps {
     }
 }
 
+/**
+ * Component for displaying energy consumption data.
+ * Supports views by tiers, sectors, and companies.
+ */
 export function EnergyConsumptionChart({
     tierData = [],
     sectorData,
     companyData,
     metaData = {}
 }: EnergyConsumptionChartProps) {
+    // State to manage the current view mode of the chart
     const [viewMode, setViewMode] = useState<"tiers" | "sectors" | "companies">("sectors")
 
-    // Format values in kWh
+    /**
+     * Formats values into a readable string with units in kWh.
+     */
     const formatValue = (value: number) => {
         if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M kWh`
         if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k kWh`
         return `${value} kWh`
     }
 
-    // Transform company data
+    /**
+     * Transforms company data for chart representation.
+     */
     const companyChartData = companyData?.map(yearEntry => {
         const entry: any = { year: yearEntry.year }
         const companyLookup = new Map(
@@ -67,7 +79,9 @@ export function EnergyConsumptionChart({
         return entry
     })
 
-    // Custom tooltip
+    /**
+     * Custom tooltip for displaying detailed information on hover.
+     */
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (!active || !payload) return null
         return (
@@ -91,7 +105,7 @@ export function EnergyConsumptionChart({
         )
     }
 
-    return (<>
+    return (
         <Card className="rounded-sm">
             <CardHeader>
                 <div className="flex justify-between">
@@ -99,6 +113,7 @@ export function EnergyConsumptionChart({
                         <ZapIcon className="h-5 w-5 text-primary" />
                         Energy Consumption
                     </CardTitle>
+                    {/* ToggleGroup for switching between different views */}
                     <ToggleGroup
                         type="single"
                         variant={"outline"}
@@ -106,7 +121,7 @@ export function EnergyConsumptionChart({
                         onValueChange={(val) => {
                             // Only update if a new value was selected (not deselected)
                             if (val) setViewMode(val as "tiers" | "sectors" | "companies")
-                          }}
+                        }}
                     >
                         <ToggleGroupItem value="tiers">By Tiers</ToggleGroupItem>
                         <ToggleGroupItem value="sectors" disabled={!sectorData}>
@@ -120,8 +135,6 @@ export function EnergyConsumptionChart({
             </CardHeader>
             <CardContent className="h-[400px]">
                 <div className="space-y-4">
-
-
                     <div className="h-[350px]">
                         <ResponsiveContainer width="100%" height="100%">
                             {viewMode === "tiers" ? (
@@ -159,7 +172,7 @@ export function EnergyConsumptionChart({
                                     <Legend />
                                     {sectorData?.[0] && Object.keys(sectorData[0])
                                         .filter(key => key.endsWith('_energy'))
-                                        .map((key, index) => (
+                                        .map((key) => (
                                             <Bar
                                                 key={key}
                                                 dataKey={key}
@@ -174,7 +187,7 @@ export function EnergyConsumptionChart({
                                     <YAxis tickFormatter={value => formatValue(value).replace(' kWh', '')} />
                                     <Tooltip content={<CustomTooltip />} />
                                     <Legend />
-                                    {metaData?.company_list?.map((company, index) => (
+                                    {metaData?.company_list?.map((company) => (
                                         <Bar
                                             key={company}
                                             dataKey={company}
@@ -189,7 +202,5 @@ export function EnergyConsumptionChart({
                 </div>
             </CardContent>
         </Card>
-
-    </>
     )
 }

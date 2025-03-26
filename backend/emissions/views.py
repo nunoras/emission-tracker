@@ -1,17 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 from .models import UploadedFile, CompanyEmissions
 import pandas as pd
 from io import BytesIO
 from .models import UploadedFile, CompanyEmissions
-from .serializers import CompanyEmissionsSerializer 
-import datetime
 from collections import defaultdict
 from django.db.models import Avg
-import itertools
 import numpy as np
 import re 
 

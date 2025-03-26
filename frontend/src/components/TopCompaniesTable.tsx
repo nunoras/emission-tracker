@@ -9,15 +9,33 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group" 
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { Building2 } from "lucide-react"
 
-export function TopCompaniesTable({ companyData, isLoading }: TopCompaniesTableProps) {
+/**
+ * Component for displaying top companies by emissions or energy consumption.
+ * Allows for searching and toggling between metrics.
+ */
+
+interface TopCompaniesTableProps {
+    companyData?: {
+        year: string
+        companies: {
+            name: string
+            emissions: number
+            consumption: number
+            sector: string
+        }[]
+    }[]
+    isLoading?: boolean
+}
+
+export function TopCompaniesTable({ companyData }: TopCompaniesTableProps) {
     const [searchTerm, setSearchTerm] = useState("")
     const [metric, setMetric] = useState<"emissions" | "consumption">("emissions")
 
-    // Process and sort companies
+    // Process and flatten company data from all years
     const processedCompanies = useMemo(() => {
         if (!companyData || companyData.length === 0) return []
 
@@ -32,7 +50,7 @@ export function TopCompaniesTable({ companyData, isLoading }: TopCompaniesTableP
         return allCompanies
     }, [companyData])
 
-    // Sort by selected metric and filter by search
+    // Filter and sort companies based on search term and selected metric
     const filteredSortedCompanies = useMemo(() => {
         return [...processedCompanies]
             .filter(company =>
@@ -42,11 +60,12 @@ export function TopCompaniesTable({ companyData, isLoading }: TopCompaniesTableP
             .sort((a, b) => b[metric] - a[metric])
     }, [processedCompanies, metric, searchTerm])
 
-    // Dynamic title based on metric
+    // Determine table title based on selected metric
     const tableTitle = metric === "emissions"
         ? "Companies with the largest carbon footprint"
         : "Companies with highest energy consumption"
 
+    // Display message if no company data is available
     if (processedCompanies.length === 0) {
         return <div className="text-center py-8 text-muted-foreground">No company data available</div>
     }
@@ -73,7 +92,6 @@ export function TopCompaniesTable({ companyData, isLoading }: TopCompaniesTableP
                             onValueChange={(val) => {
                                 if (val) setMetric(val as "emissions" | "consumption")
                             }}
-
                         >
                             <ToggleGroupItem
                                 value="emissions"
@@ -88,7 +106,6 @@ export function TopCompaniesTable({ companyData, isLoading }: TopCompaniesTableP
                                 Energy
                             </ToggleGroupItem>
                         </ToggleGroup>
-
                     </div>
                 </div>
             </CardHeader>
