@@ -8,3 +8,4 @@
    * ~~Adicionar rankings para se ver facilmente o TOP 5~~
    * ~~Calcular Eficiencia~~
 3. Analise anual nao funciona
+4. Fazer as cores de setor virem todas do mesmo lado em vez de declarar em cada pagina
