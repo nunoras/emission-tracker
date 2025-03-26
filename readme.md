@@ -4,6 +4,7 @@ A web platform for analyzing energy consumption and CO₂ emissions data from DG
 - Key metrics calculation (emissions by sector, top polluters, etc.)
 - Interactive dashboard with charts
 - Dockerized deployment
+
 ➡️ There's an explanation of this project at [explanation.md](explanation.md)
 
 ## ✨ Features
