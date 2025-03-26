@@ -92,7 +92,7 @@ export function EnergyConsumptionChart({
     }
 
     return (<>
-        <Card>
+        <Card className="rounded-sm">
             <CardHeader>
                 <div className="flex justify-between">
                     <CardTitle className="flex items-center gap-2">

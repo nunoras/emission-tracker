@@ -15,6 +15,7 @@ import { TotalCo2Chart } from "@/components/TotalCo2Chart"
 import { EnergyConsumptionChart } from "@/components/EnergyConsumptionChart"
 import { ChartColorService } from "@/lib/color-service";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { TopCompaniesTable } from "@/components/TopCompaniesTable"
 
 interface UploadedFile {
   id: string
@@ -177,7 +178,7 @@ export default function EmissionsDashboard() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-y-auto p-6">
-        {stats ? (
+        {stats ? (<>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <TotalCo2Chart
               tierData={stats.tiers}
@@ -185,7 +186,6 @@ export default function EmissionsDashboard() {
               companyData={stats.companies}
               metaData={stats.metadata}
             />
-
             <EnergyConsumptionChart
               tierData={stats.tiers}
               sectorData={stats.sectors}
@@ -193,6 +193,13 @@ export default function EmissionsDashboard() {
               metaData={stats.metadata}
             />
           </div>
+          <div className="grid grid-cols-1 gap-6 mb-6">
+            <TopCompaniesTable
+            companyData={stats?.companies}
+           
+            />
+          </div>
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
             <div className="relative mb-8">

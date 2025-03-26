@@ -12,7 +12,7 @@ import {
     Legend,
 } from "recharts"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { CloudAlertIcon } from "lucide-react"
+import { CloudIcon } from "lucide-react"
 
 interface TotalCo2ChartProps {
     tierData: {
@@ -94,11 +94,11 @@ export function TotalCo2Chart({
     })
 
     return (<>
-        <Card>
+        <Card className="rounded-sm">
             <CardHeader>
                 <div className="flex  justify-between">
                     <CardTitle className="flex gap-2">
-                        <CloudAlertIcon className="h-5 w-5 text-primary" />
+                        <CloudIcon className="h-5 w-5 text-primary" />
                         Co2 Emissions
                     </CardTitle>
                     <ToggleGroup
@@ -122,7 +122,6 @@ export function TotalCo2Chart({
             </CardHeader>
             <CardContent className="h-[400px]">
                 <div className="space-y-4">
-
 
                     <div className="h-[350px]">
                         <ResponsiveContainer width="100%" height="100%">
