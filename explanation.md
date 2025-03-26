@@ -1,8 +1,9 @@
-## Solution Explanation
+# Solution Explanation
 
-### Decision Log
+## Decision Log
 
-## 1. Backend Framework Selection
+### 1. Backend Framework Selection
+
 **Decision**: Use Django + Django REST Framework  
 **Rationale**:  
 - Built-in admin interface for data inspection  
@@ -11,9 +12,16 @@
 - Had Past experience 
 - Python is great for data manipulation (pandas, np)
 
----
+### 2. Frontend Architecture  
 
-## 2. Data Processing Approach
+**Decision**: Next.js App Router + Shadcn/ui + Recharts
+**Key Benefits**:  
+- Had past experience (personal projects)
+- Shadcn allows for fast prototyping & ui design
+- Recharts handles complex visualizations  
+
+### 3. Data Processing Approach
+
 **Decision**: Two-pass aggregation with numpy percentiles  
 **First Pass: Data Collection**
 - Iterate through each company's data
@@ -25,8 +33,11 @@
 - Assign companies to appropriate emission categories
 - Aggregate sector totals based on classifications
 
+**Considerations** 
+A company may belong to multiple sectors. If a company is listed more than once for the same year and sector, their values are summed.
 
-### File Upload Validation
+## 4. File Upload Validation (`FileUploadView`)
+
 **Decision**: Implement strict schema validation  
 
 **Validated Properties**:
@@ -34,37 +45,18 @@
 - **File Size**: Maximum 10MB
 
 **Tradeoffs**:
-- ✅ Ensures data integrity
-- ❌ May reject files with minor formatting errors
+- Ensures data integrity
+- May reject files with minor formatting errors
 
-4. Frontend Architecture  
-**Decision**: Next.js App Router + Shadcn/ui + Recharts
-**Key Benefits**:  
-- Had past experience (personal projects)
-- Shadcn allows for fast prototyping & ui design
-- Recharts handles complex visualizations  
+## 5. File Processing (`FileUploadView`)
 
-### File Upload & Processing (`FileUploadView`)
-
-**1. Validation Layer**
-```python
-# Size check (10MB max)
-if file_obj.size > MAX_FILE_SIZE:
-    return Response({"error": "File too large"}, status=413)
-
-# Schema validation
-required_columns = {"Empresa", "Setor", "Consumo de Energia (MWh)", ...}
-if not required_columns.issubset(df.columns):
-    return Response({"error": "Invalid file schema"}, status=400)
-```
-
-**2. Data Transformation** 
+**1. Data Transformation** 
 
 - Converts Excel rows to Django model instances
 - Handles type conversion (e.g., "Ano" to integer)
 - Utilizes bulk creation for performance improvements
 
-**3. Error Handling**
+**2. Error Handling**
 
 | Error Case       | HTTP Status | Response Example                       |
 |------------------|-------------|----------------------------------------|
@@ -72,12 +64,7 @@ if not required_columns.issubset(df.columns):
 | Invalid schema   | 400         | {"error": "Missing column: Empresa"}   |
 | Processing error | 422         | {"error": "Invalid year value"}        |
 
-
-
-
-Statistics Generation (`FileStatsView`)
-=============================
-
+## Statistics Generation (`FileStatsView`)
 ### Tier Classification
 
 Tiers are determined using percentiles of the data (with numpy):
@@ -86,67 +73,6 @@ Tiers are determined using percentiles of the data (with numpy):
 *   `energy_medium`: 50th percentile of energy consumption (middle 50%)
 *   `energy_low`: 25th percentile of energy consumption (bottom 25%)
 
-### Sector Aggregation
 
-Groups by primary sector (first sector listed)
-Tracks both emissions and energy metrics
 
-### Company Ranking
 
-Preserves sector associations
-
-Response Structure
-```javascript
-{
-  "tiers": [ // Annual tier breakdown
-    {
-      "year": "2023",
-      "co2_high": 1500,  // Total emissions in tier
-      "energy_low": 200   // Total energy in tier
-    }
-  ],
-  "sectors": [ // Sector trends
-    {
-      "year": "2023",
-      "Construction": 1200,         // Sector emissions
-      "Construction_energy": 3000    // Sector energy 
-    }
-  ],
-  "metadata": { // Dataset summary
-    "years": ["2022", "2023"],
-    "company_count": 42
-  },
-  "companies": [ // Top 5 companies (default)
-    {
-      "name": "Company 1",
-      "sector": "Construction",
-      "emissions": 300,
-      "energy": 1000
-    },
-    {
-      "name": "Company 2",
-      "sector": "Manufacturing",
-      "emissions": 200,
-      "energy": 500
-    }
-  ]
-}
-```
-
-## Key Technical Decisions
-
-### Percentile-Based Tiers
-
-- Adapts dynamically to data distribution
-- Provides more accuracy than fixed thresholds
-
-### Two-Pass Processing
-
-- **First pass**: Collect raw data
-- **Second pass**: Calculate metrics
-- Ensures consistency in analysis
-
-### Bulk Database Operations
-
-- Mitigates N+1 query issues
-- Enhances performance for large datasets

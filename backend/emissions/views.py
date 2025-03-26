@@ -159,7 +159,7 @@ class FileStatsView(APIView):
         try:
             uploaded_file = UploadedFile.objects.get(pk=file_id)
         except UploadedFile.DoesNotExist:
-            raise NotFound("File not found")
+            return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
 
         queryset = CompanyEmissions.objects.filter(file_id=file_id)
         
@@ -217,9 +217,9 @@ class FileStatsView(APIView):
                     tier_data[year]['energy_low'] += data['consumption']
                 
                 # Sector data
-                primary_sector = next(iter(data['sectors'])) if data['sectors'] else 'Unknown'
-                sector_data[year][primary_sector] += data['emissions']
-                sector_data[year][f"{primary_sector}_energy"] += data['consumption']
+                for sector in data['sectors']:  # ✅ Loop through all sectors
+                    sector_data[year][sector] += data['emissions']
+                    sector_data[year][f"{sector}_energy"] += data['consumption']
 
         # Prepare sorted response data
         sorted_years = sorted(tier_data.keys())
