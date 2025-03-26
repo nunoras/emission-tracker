@@ -4,7 +4,6 @@
 
 ## 1. Backend Framework Selection
 **Decision**: Use Django + Django REST Framework  
-**Alternatives Considered**: Flask, FastAPI, Node.js  
 **Rationale**:  
 - Built-in admin interface for data inspection  
 - ORM simplifies PostgreSQL integration  
@@ -16,24 +15,22 @@
 
 ## 2. Data Processing Approach
 **Decision**: Two-pass aggregation with numpy percentiles  
-**Alternatives**:  
-- Fixed threshold tiers (e.g., >1000 tonnes = High)  
-- SQL window functions  
-**Why Chosen**:  
-- Adapts to yearly data variance  
-- Reduces database load vs. real-time calculations  
-**Code Reference**:  
-```python
-# FileStatsView.py
-co2_high = np.percentile(emissions_values, 75)
-```
+**First Pass: Data Collection**
+- Iterate through each company's data
+- Accumulate emissions and energy consumption figures
+- Track sector membership for each company
+
+**Second Pass: Calculation and Classification**
+- Determine emission thresholds for categorization
+- Assign companies to appropriate emission categories
+- Aggregate sector totals based on classifications
+
 
 ### File Upload Validation
 **Decision**: Implement strict schema validation  
 
 **Validated Properties**:
 - **Required Columns**: Empresa, Setor, etc.
-- **Year**: Must be an integer
 - **File Size**: Maximum 10MB
 
 **Tradeoffs**:
