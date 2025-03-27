@@ -7,6 +7,43 @@ A web platform for analyzing energy consumption and CO₂ emissions data from DG
 
 ➡️ There's an explanation of this project at [explanation.md](explanation.md)
 
+
+### Usage
+1. Upload a file by clicking on the **Upload File** button on the left-hand side menu.
+2. You can delete the uploaded file by right-clicking on it and selecting **Delete File**.
+3. Browse insights about the uploaded file on the right-hand side of the page.
+
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Docker 
+- Node.js 18+
+- Python 3.11+
+
+### Installation
+```bash
+git clone https://github.com/nunoras/emission-tracker.git
+cd emission-tracker
+```
+
+# Using Docker (recommended)
+```bash
+docker-compose up --build
+```
+
+# Manually
+```bash
+cd backend && pip install -r requirements.txt
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+
+cd ../frontend
+npm install
+npm run dev
+```
+
 ## ✨ Features
 
 - **File Processing**
@@ -39,32 +76,4 @@ A web platform for analyzing energy consumption and CO₂ emissions data from DG
 - Docker + Docker Compose
 - PostgreSQL
 
-## 🚀 Getting Started
 
-### Prerequisites
-- Docker Desktop
-- Node.js 18+
-- Python 3.11+
-
-### Installation
-```bash
-git clone https://github.com/nunoras/emission-tracker.git
-cd emission-tracker
-```
-
-# Using Docker (recommended)
-```bash
-docker-compose up --build
-```
-
-# Manually
-```bash
-cd backend && pip install -r requirements.txt
-python manage.py makemigrations
-python manage.py migrate
-python manage.py runserver
-
-cd ../frontend
-npm install
-npm run dev
-```
